@@ -34,11 +34,11 @@ bewerbungen = Table(
 
 stmt = bewerbungen.select().order_by(bewerbungen.c.id.desc()).limit(1)
 
-werte = stmt.execute()
-
 liste = []
 for e in stmt.execute():
     liste = [str(el) for el in e]
+
+namedtuple
 
 print(" | ".join(liste))
 
@@ -47,7 +47,7 @@ class Seite1(wx.Panel):
     def __init__(self, parent):
         super(Seite1, self).__init__(parent)
 
-        topLbl = wx.StaticText(self, -1, "Hier bitte die Firmendaten eingeben")
+        topLbl = wx.StaticText(self, -1, "Firmendaten")
         topLbl.SetFont(wx.Font(18, wx.SWISS, wx.NORMAL, wx.BOLD))
         
         bezeichnungLbl       = wx.StaticText(self, -1, "Bezeichnung:")
@@ -166,16 +166,82 @@ class Seite1(wx.Panel):
         stmt.execute(dictionary)
 
         
-        
 class Seite2(wx.Panel):
     def __init__(self, parent):
         super(Seite2, self).__init__(parent)
 
-
+        
 class Seite3(wx.Panel):
     def __init__(self, parent):
         super(Seite3, self).__init__(parent)
 
+        topLbl = wx.StaticText(self, -1, "Konfiguration")
+        topLbl.SetFont(wx.Font(18, wx.SWISS, wx.NORMAL, wx.BOLD))
+
+        benutzerLbl = wx.StaticText(self, -1, "Benutzer:")
+        self.benutzer = wx.TextCtrl(self, -1, "")
+
+        passwortLbl = wx.StaticText(self, -1, "Passwort:")
+        self.passwort = wx.TextCtrl(self, -1, "")
+
+        datenbankLbl = wx.StaticText(self, -1, "Datenbank:")
+        self.datenbank = wx.TextCtrl(self, -1, "")
+        
+        speicherBtn = wx.Button(self, -1, "Speichern")
+        self.Bind(wx.EVT_BUTTON, self.speichern, speicherBtn)
+        
+        beendeBtn = wx.Button(self, -1, "Beenden")
+        self.Bind(wx.EVT_BUTTON, self.beenden, beendeBtn)
+
+        mainSizer = wx.BoxSizer(wx.VERTICAL)
+        mainSizer.Add(topLbl, 0, wx.ALL, 9)
+        mainSizer.Add(wx.StaticLine(self), 0, wx.EXPAND|wx.TOP|wx.BOTTOM, 9)
+
+        addrSizer = wx.FlexGridSizer(cols=2, hgap=5, vgap=5)
+        addrSizer.AddGrowableCol(1)
+        addrSizer.Add(benutzerLbl, 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+        addrSizer.Add(self.benutzer, 0, wx.EXPAND)
+        addrSizer.Add(passwortLbl, 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+        addrSizer.Add(self.passwort, 0, wx.EXPAND)
+        addrSizer.Add(datenbankLbl, 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+        addrSizer.Add(self.datenbank, 0, wx.EXPAND)
+
+        
+        mainSizer.Add(addrSizer, 0, wx.EXPAND|wx.ALL, 10)
+        
+        btnSizer = wx.BoxSizer(wx.HORIZONTAL)
+        btnSizer.Add((20, 20), 1)
+        btnSizer.Add(speicherBtn, 0, wx.EXPAND|wx.TOP|wx.BOTTOM, 10)
+        btnSizer.Add((20, 20), 1)
+        btnSizer.Add(beendeBtn, 0, wx.EXPAND|wx.TOP|wx.BOTTOM, 10)
+        btnSizer.Add((20, 20), 1)
+        
+        mainSizer.Add(btnSizer, 0, wx.EXPAND|wx.BOTTOM, 20)
+
+        self.SetSizer(mainSizer)
+
+        mainSizer.Fit(self)
+        mainSizer.SetSizeHints(self)
+
+
+    def beenden(self, event):
+        self.GetTopLevelParent().Close(True)
+
+
+    def speichern(self, event):
+        schluessel = "benutzer, passwort, datenbank"
+
+        werte = ([self.benutzer.GetValue(), self.passwort.GetValue(),\
+                  self.datenbank.GetValue()])
+
+        werte = [wert.strip() for wert in werte]
+
+        dictionary = dict(zip(schluessel.split(", "), werte))
+
+        # stmt = bewerbungen.insert()
+        # stmt.execute(dictionary)
+
+        
 
 class FirmaFrame(wx.Frame):
     def __init__(self, parent, title):
