@@ -43,9 +43,9 @@ namedtuple
 print(" | ".join(liste))
 
 
-class Seite1(wx.Panel):
+class Reiter1(wx.Panel):
     def __init__(self, parent):
-        super(Seite1, self).__init__(parent)
+        super(Reiter1, self).__init__(parent)
 
         topLbl = wx.StaticText(self, -1, "Firmendaten")
         topLbl.SetFont(wx.Font(18, wx.SWISS, wx.NORMAL, wx.BOLD))
@@ -166,14 +166,14 @@ class Seite1(wx.Panel):
         stmt.execute(dictionary)
 
         
-class Seite2(wx.Panel):
+class Reiter2(wx.Panel):
     def __init__(self, parent):
-        super(Seite2, self).__init__(parent)
+        super(Reiter2, self).__init__(parent)
 
         
-class Seite3(wx.Panel):
+class Reiter3(wx.Panel):
     def __init__(self, parent):
-        super(Seite3, self).__init__(parent)
+        super(Reiter3, self).__init__(parent)
 
         topLbl = wx.StaticText(self, -1, "Konfiguration")
         topLbl.SetFont(wx.Font(18, wx.SWISS, wx.NORMAL, wx.BOLD))
@@ -251,9 +251,9 @@ class FirmaFrame(wx.Frame):
         
     def InitUI(self):
         nb = wx.Notebook(self)
-        nb.AddPage(Seite1(nb), "Eingabe")
-        nb.AddPage(Seite2(nb), "Vorlagen")
-        nb.AddPage(Seite3(nb), "Konfiguration")
+        nb.AddPage(Reiter1(nb), "Eingabe")
+        nb.AddPage(Reiter2(nb), "Vorlagen")
+        nb.AddPage(Reiter3(nb), "Konfiguration")
         
         self.Centre()
         self.Show(True)
