@@ -6,43 +6,6 @@ from pprint import pprint
 from collections import namedtuple
 
 
-connect = ""
-with open("connect.txt") as datei:
-    connect = datei.readline()
-    
-metadata = MetaData(connect)
-
-
-bewerbungen = Table(
-    'bewerbungen', metadata,
-    Column('id', Integer, primary_key=True),
-    Column('bezeichnung', Unicode(255), unique=False, nullable=False),
-    Column('firma', Unicode(128), unique=False, nullable=False),
-    Column('ansprechpartner', Unicode(64), unique=True, nullable=True),
-    Column('anrede', Unicode(4), unique=False, nullable=True),
-    Column('strasse', Unicode(128), unique=False, nullable=False),
-    Column('plz', Unicode(5), unique=False, nullable=False),
-    Column('ort', Unicode(128), unique=False, nullable=False),
-    Column('telefon', Unicode(32), unique=True, nullable=True),
-    Column('mobil', Unicode(32), unique=True, nullable=True),
-    Column('email', Unicode(128), unique=True, nullable=True),
-    Column('website', Unicode(128), unique=True, nullable=True),
-    Column('quelle', Unicode(128), unique=False, nullable=False),
-    Column('ergebnis', Unicode(1024), unique=False, nullable=True),
-    Column('zeit', Unicode(30), unique=True, nullable=False))
-
-
-stmt = bewerbungen.select().order_by(bewerbungen.c.id.desc()).limit(1)
-
-liste = []
-for e in stmt.execute():
-    liste = [str(el) for el in e]
-
-namedtuple
-
-print(" | ".join(liste))
-
-
 class Reiter1(wx.Panel):
     def __init__(self, parent):
         super(Reiter1, self).__init__(parent)
@@ -162,6 +125,30 @@ class Reiter1(wx.Panel):
 
         dictionary = dict(zip(schluessel.split(", "), werte))
 
+        connect = ""
+        with open("connect.txt") as datei:
+            connect = datei.readline()
+            
+        metadata = MetaData(connect)        
+
+        bewerbungen = Table(
+            'bewerbungen', metadata,
+            Column('id', Integer, primary_key=True),
+            Column('bezeichnung', Unicode(255), unique=False, nullable=False),
+            Column('firma', Unicode(128), unique=False, nullable=False),
+            Column('ansprechpartner', Unicode(64), unique=True, nullable=True),
+            Column('anrede', Unicode(4), unique=False, nullable=True),
+            Column('strasse', Unicode(128), unique=False, nullable=False),
+            Column('plz', Unicode(5), unique=False, nullable=False),
+            Column('ort', Unicode(128), unique=False, nullable=False),
+            Column('telefon', Unicode(32), unique=True, nullable=True),
+            Column('mobil', Unicode(32), unique=True, nullable=True),
+            Column('email', Unicode(128), unique=True, nullable=True),
+            Column('website', Unicode(128), unique=True, nullable=True),
+            Column('quelle', Unicode(128), unique=False, nullable=False),
+            Column('ergebnis', Unicode(1024), unique=False, nullable=True),
+            Column('zeit', Unicode(30), unique=True, nullable=False))
+        
         stmt = bewerbungen.insert()
         stmt.execute(dictionary)
 
@@ -229,19 +216,16 @@ class Reiter3(wx.Panel):
 
 
     def speichern(self, event):
-        schluessel = "benutzer, passwort, datenbank"
+        with open("connect.txt", "w+") as datei:
+            datei.write("mysql://{}:{}@localhost/{}".format(self.benutzer.GetValue(),
+                                                            self.passwort.GetValue(), self.datenbank.GetValue()))
 
-        werte = ([self.benutzer.GetValue(), self.passwort.GetValue(),\
-                  self.datenbank.GetValue()])
-
-        werte = [wert.strip() for wert in werte]
-
-        dictionary = dict(zip(schluessel.split(", "), werte))
-
-        # stmt = bewerbungen.insert()
-        # stmt.execute(dictionary)
-
-        
+        connect = ""
+        with open("connect.txt") as datei:
+            connect = datei.readline()
+    
+        metadata = MetaData(connect)
+                
 
 class FirmaFrame(wx.Frame):
     def __init__(self, parent, title):
@@ -258,6 +242,7 @@ class FirmaFrame(wx.Frame):
         self.Centre()
         self.Show(True)
 
+        
 
 if __name__=='__main__':
     app = wx.App()
