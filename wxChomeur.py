@@ -4,11 +4,29 @@ from sqlalchemy import *
 from sqlalchemy.sql import func
 from pprint import pprint
 from collections import namedtuple
+import subprocess
+from time import strftime
+import locale
+import logging
 
+
+locale.setlocale(locale.LC_ALL, '')
+zeit = strftime("%A,%d.%m.%Y_%H:%M:%S")
 
 class Reiter1(wx.Panel):
     def __init__(self, parent):
         super(Reiter1, self).__init__(parent)
+
+        self.angebotstext = ""
+        self.ausgabedatei = ""
+        
+        try:
+            # self.angebotstext = subprocess.run("xsel", capture_output=True)
+            self.angebotstext = str(subprocess.check_output("xsel", shell=False))
+            print(type(self.angebotstext))
+        except IOError as e:
+            print(e)
+            exit("Bitte den Angebotstext auswählen und kopieren!")
 
         topLbl = wx.StaticText(self, -1, "Firmendaten")
         topLbl.SetFont(wx.Font(18, wx.SWISS, wx.NORMAL, wx.BOLD))
@@ -111,10 +129,11 @@ class Reiter1(wx.Panel):
 
 
     def speichern(self, event):
-        schluessel = "bezeichnung, firma, ansprechpartner, anrede, strasse, plz, ort, telefon, mobil, email, website, quelle, ergebnis"
+        schluessel = "bezeichnung, firma, ansprechpartner, anrede, ausgabedatei, strasse, plz, ort, telefon, mobil, email, website, quelle, ergebnis"
 
         werte = ([self.bezeichnung.GetValue(), self.firma.GetValue(),\
                   self.ansprechpartner.GetValue(), self.anrede.GetValue(),\
+                  self.ausgabedatei,
                   self.strasse.GetValue(), self.plz.GetValue(),\
                   self.ort.GetValue(), self.telefon.GetValue(),\
                   self.mobil.GetValue(), self.email.GetValue(),\
@@ -125,6 +144,19 @@ class Reiter1(wx.Panel):
 
         dictionary = dict(zip(schluessel.split(", "), werte))
 
+        for k in dictionary.keys():
+            print("{} : {}".format(k, dictionary[k]))
+        
+        bezeichnung       = str(self.bezeichnung.GetValue()).replace(" ", "_")
+        firma             = str(self.firma.GetValue()).replace(" ", "_")
+        self.ausgabedatei = bezeichnung + "_" + firma + "_" + zeit + ".txt"
+
+        dictionary["ausgabedatei"] = self.ausgabedatei
+
+        
+        with open(self.ausgabedatei, "w") as ausgabe:
+            ausgabe.write(self.angebotstext)
+            
         connect = ""
         with open("connect.txt") as datei:
             connect = datei.readline()
@@ -138,6 +170,7 @@ class Reiter1(wx.Panel):
             Column('firma', Unicode(128), unique=False, nullable=False),
             Column('ansprechpartner', Unicode(64), unique=True, nullable=True),
             Column('anrede', Unicode(4), unique=False, nullable=True),
+            Column('ausgabedatei', Unicode(255), unique=True, nullable=True),
             Column('strasse', Unicode(128), unique=False, nullable=False),
             Column('plz', Unicode(5), unique=False, nullable=False),
             Column('ort', Unicode(128), unique=False, nullable=False),
@@ -156,11 +189,6 @@ class Reiter1(wx.Panel):
 class Reiter2(wx.Panel):
     def __init__(self, parent):
         super(Reiter2, self).__init__(parent)
-
-        
-class Reiter3(wx.Panel):
-    def __init__(self, parent):
-        super(Reiter3, self).__init__(parent)
 
         topLbl = wx.StaticText(self, -1, "Konfiguration")
         topLbl.SetFont(wx.Font(18, wx.SWISS, wx.NORMAL, wx.BOLD))
@@ -192,7 +220,6 @@ class Reiter3(wx.Panel):
         addrSizer.Add(self.passwort, 0, wx.EXPAND)
         addrSizer.Add(datenbankLbl, 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
         addrSizer.Add(self.datenbank, 0, wx.EXPAND)
-
         
         mainSizer.Add(addrSizer, 0, wx.EXPAND|wx.ALL, 10)
         
@@ -236,8 +263,7 @@ class FirmaFrame(wx.Frame):
     def InitUI(self):
         nb = wx.Notebook(self)
         nb.AddPage(Reiter1(nb), "Eingabe")
-        nb.AddPage(Reiter2(nb), "Vorlagen")
-        nb.AddPage(Reiter3(nb), "Konfiguration")
+        nb.AddPage(Reiter2(nb), "Konfiguration")
         
         self.Centre()
         self.Show(True)
