@@ -10,4 +10,7 @@ Verwendung: ./wxChomeur.py
 
 VORAUSSETZUNG: Installation von MariaDB oder MySQL, jinja2, texlive, etc. sowie die richtigen Daten in connect.txt eintragen!
 
+Mindestkonfigurationsanforderung für die Datenbank liegt in Form von connect.txt bei!
+Der Einfachheit halber lege ich noch eine Musterdatenbank (SQLite3) bei.
+
 Dokumentation wird noch vervollständigt. Also Geduld!
