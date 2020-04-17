@@ -1,14 +1,24 @@
 #!/usr/bin/python3
+from   os              import getcwd
+from   os.path         import basename
+from   sys             import argv
 import wx
-from sqlalchemy import *
-from sqlalchemy.sql import func
-from pprint import pprint
-from collections import namedtuple
+from   sqlalchemy      import *
+from   sqlalchemy.sql  import func
+from   pprint          import pprint
+from   collections     import namedtuple
 import subprocess
-from time import strftime
+import html2text
+from   time            import strftime
 import locale
 import logging
 
+base     = basename(getcwd()).upper()
+logfile  = base + ".LOG"
+
+logging.basicConfig(filename=logfile, level=logging.DEBUG, format="%(name)s %(message)s %(levelname)s %(asctime)s %(lineno)d")
+
+log = logging.getLogger(base)
 
 locale.setlocale(locale.LC_ALL, '')
 zeit = strftime("%A,%d.%m.%Y_%H:%M:%S")
@@ -19,13 +29,13 @@ class Reiter1(wx.Panel):
 
         self.angebotstext = ""
         self.ausgabedatei = ""
-        
+
         try:
-            # self.angebotstext = subprocess.run("xsel", capture_output=True)
-            self.angebotstext = str(subprocess.check_output("xsel", shell=False))
-            print(type(self.angebotstext))
+            self.angebotstext = str(subprocess.check_output("xsel", shell=True))
+            if len(self.angebotstext) < 10:
+                raise IOError
         except IOError as e:
-            print(e)
+            log.debug(e)
             exit("Bitte den Angebotstext auswählen und kopieren!")
 
         topLbl = wx.StaticText(self, -1, "Firmendaten")
@@ -124,10 +134,6 @@ class Reiter1(wx.Panel):
         mainSizer.SetSizeHints(self)
 
         
-    def beenden(self, event):
-        self.GetTopLevelParent().Close(True)
-
-
     def speichern(self, event):
         schluessel = "bezeichnung, firma, ansprechpartner, anrede, ausgabedatei, strasse, plz, ort, telefon, mobil, email, website, quelle, ergebnis"
 
@@ -142,15 +148,21 @@ class Reiter1(wx.Panel):
 
         werte = [wert.strip() for wert in werte]
 
+        log.info("BEGINN")
+        log.debug(werte)
+
         dictionary = dict(zip(schluessel.split(", "), werte))
 
         for k in dictionary.keys():
-            print("{} : {}".format(k, dictionary[k]))
+            log.debug(k)
+            log.debug(dictionary[k])
         
         bezeichnung       = str(self.bezeichnung.GetValue()).replace(" ", "_")
         firma             = str(self.firma.GetValue()).replace(" ", "_")
         self.ausgabedatei = bezeichnung + "_" + firma + "_" + zeit + ".txt"
 
+        log.debug(self.ausgabedatei)
+        
         dictionary["ausgabedatei"] = self.ausgabedatei
 
         
@@ -184,6 +196,13 @@ class Reiter1(wx.Panel):
         
         stmt = bewerbungen.insert()
         stmt.execute(dictionary)
+
+
+    def beenden(self, event):
+        log.info("ENDE")
+        self.GetTopLevelParent().Close(True)
+
+
 
         
 class Reiter2(wx.Panel):
