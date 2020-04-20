@@ -7,7 +7,7 @@ from   sqlalchemy      import *
 from   sqlalchemy.sql  import func
 from   pprint          import pprint
 from   collections     import namedtuple
-from   subprocess      import Popen, PIPE
+from   subprocess      import check_output
 import html2text
 from   time            import strftime
 import locale
@@ -20,8 +20,8 @@ logging.basicConfig(filename=logfile, level=logging.DEBUG, format="%(name)s %(me
 
 log = logging.getLogger(base)
 
-locale.setlocale(locale.LC_ALL, '')
-zeit = strftime("%A,%d.%m.%Y_%H:%M:%S")
+locale.setlocale(locale.LC_ALL, "")
+zeit = strftime("%d-%m-%Y_%H:%M:%S")
 
 class Reiter1(wx.Panel):
     def __init__(self, parent):
@@ -31,9 +31,8 @@ class Reiter1(wx.Panel):
         self.ausgabedatei = ""
         
         try:
-            with Popen(r'xsel', stdout=PIPE, stderr=PIPE) as p:
-                output, errors = p.communicate()
-                self.angebotstext = output.decode('utf-8')
+            angebot = check_output('xsel')
+            self.angebotstext = angebot.decode('utf-8')
             if len(self.angebotstext) < 10:
                 raise IOError
         except IOError as e:
@@ -167,7 +166,6 @@ class Reiter1(wx.Panel):
         
         dictionary["ausgabedatei"] = self.ausgabedatei
 
-        
         with open(self.ausgabedatei, "w") as ausgabe:
             ausgabe.write(self.angebotstext)
             
