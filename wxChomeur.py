@@ -7,7 +7,7 @@ from   sqlalchemy      import *
 from   sqlalchemy.sql  import func
 from   pprint          import pprint
 from   collections     import namedtuple
-import subprocess
+from   subprocess      import Popen, PIPE
 import html2text
 from   time            import strftime
 import locale
