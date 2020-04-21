@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-from   os              import getcwd
+from   os              import getcwd, system
 from   os.path         import basename
 from   sys             import argv
 import wx
@@ -12,6 +12,8 @@ import html2text
 from   time            import strftime
 import locale
 import logging
+
+system('xsel -c')
 
 base     = basename(getcwd()).upper()
 logfile  = base + ".LOG"
@@ -27,18 +29,6 @@ class Reiter1(wx.Panel):
     def __init__(self, parent):
         super(Reiter1, self).__init__(parent)
         
-        self.angebotstext = ""
-        self.ausgabedatei = ""
-        
-        try:
-            angebot = check_output('xsel')
-            self.angebotstext = angebot.decode('utf-8')
-            if len(self.angebotstext) < 10:
-                raise IOError
-        except IOError as e:
-            log.debug(e)
-            exit("Bitte den Angebotstext auswählen und kopieren!")
-
         topLbl = wx.StaticText(self, -1, "Firmendaten")
         topLbl.SetFont(wx.Font(18, wx.SWISS, wx.NORMAL, wx.BOLD))
         
@@ -138,6 +128,8 @@ class Reiter1(wx.Panel):
     def speichern(self, event):
         schluessel = "bezeichnung, firma, ansprechpartner, anrede, ausgabedatei, strasse, plz, ort, telefon, mobil, email, website, quelle, ergebnis"
 
+        self.ausgabedatei = ""
+        
         werte = ([self.bezeichnung.GetValue(), self.firma.GetValue(),\
                   self.ansprechpartner.GetValue(), self.anrede.GetValue(),\
                   self.ausgabedatei,
@@ -161,14 +153,32 @@ class Reiter1(wx.Panel):
         bezeichnung       = str(self.bezeichnung.GetValue()).replace(" ", "_")
         firma             = str(self.firma.GetValue()).replace(" ", "_")
         self.ausgabedatei = bezeichnung + "_" + firma + "_" + zeit + ".txt"
-
+   
+        try:
+            dlg = wx.MessageDialog(None, "Die Anwendung wird geschlossen, wenn kein Angebot ausgewählt wird.", "Angebotstext auswählen und kopieren", wx.YES_NO | wx.ICON_QUESTION)
+            retCode = dlg.ShowModal()
+            if(retCode == wx.ID_YES):
+                angebot = check_output('xsel')
+                self.angebotstext = angebot.decode('utf-8')
+                if len(self.angebotstext) == 0:
+                    exit()
+                log.debug(self.ausgabedatei)
+                log.debug(self.angebotstext)
+                with open(self.ausgabedatei, "w") as ausgabe:
+                    ausgabe.write(self.angebotstext)
+                log.debug("GESPEICHERT")
+            else:
+                log.debug("NICHT GESPEICHERT")
+                raise IOError
+        except IOError:
+            log.debug("ENDE WEGEN FEHLENDEN ANGEBOTSTEXTS")
+            dlg.Destroy()
+            exit()
+        
         log.debug(self.ausgabedatei)
         
         dictionary["ausgabedatei"] = self.ausgabedatei
 
-        with open(self.ausgabedatei, "w") as ausgabe:
-            ausgabe.write(self.angebotstext)
-            
         connect = ""
         with open("connect.txt") as datei:
             connect = datei.readline()
