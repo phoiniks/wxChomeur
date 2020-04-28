@@ -12,15 +12,15 @@ import html2text
 from   time            import strftime
 import locale
 import logging
+import psycopg2
 
-system('xsel -c')
 
 base     = basename(getcwd()).upper()
 logfile  = base + ".LOG"
 
 logging.basicConfig(filename=logfile, level=logging.DEBUG, format="%(name)s %(message)s %(levelname)s %(asctime)s %(lineno)d")
 
-log = logging.getLogger(base)
+log = logging.getLogger('sqlalchemy.engine')
 
 locale.setlocale(locale.LC_ALL, "")
 zeit = strftime("%d-%m-%Y_%H:%M:%S")
@@ -28,7 +28,7 @@ zeit = strftime("%d-%m-%Y_%H:%M:%S")
 class Reiter1(wx.Panel):
     def __init__(self, parent):
         super(Reiter1, self).__init__(parent)
-        
+
         topLbl = wx.StaticText(self, -1, "Firmendaten")
         topLbl.SetFont(wx.Font(18, wx.SWISS, wx.NORMAL, wx.BOLD))
         
@@ -126,86 +126,90 @@ class Reiter1(wx.Panel):
 
         
     def speichern(self, event):
-        schluessel = "bezeichnung, firma, ansprechpartner, anrede, ausgabedatei, strasse, plz, ort, telefon, mobil, email, website, quelle, ergebnis"
+        schluessel = """bezeichnung firma ansprechpartner anrede ausgabedatei strasse
+plz ort telefon mobil email website quelle ergebnis""".split()
 
-        self.ausgabedatei = ""
+        bezeichnung       = str(self.bezeichnung.GetValue()).replace(" ", "_")
+        firma             = str(self.firma.GetValue()).replace(" ", "_")
+        ausgabedatei = bezeichnung + "_" + firma + "_" + zeit + ".txt"
         
-        werte = ([self.bezeichnung.GetValue(), self.firma.GetValue(),\
-                  self.ansprechpartner.GetValue(), self.anrede.GetValue(),\
-                  self.ausgabedatei,
-                  self.strasse.GetValue(), self.plz.GetValue(),\
-                  self.ort.GetValue(), self.telefon.GetValue(),\
-                  self.mobil.GetValue(), self.email.GetValue(),\
-                  self.website.GetValue(), self.quelle.GetValue(),\
+        werte = ([self.bezeichnung.GetValue(), self.firma.GetValue(), \
+                  self.ansprechpartner.GetValue(), self.anrede.GetValue(), \
+                  ausgabedatei, \
+                  self.strasse.GetValue(), self.plz.GetValue(), \
+                  self.ort.GetValue(), self.telefon.GetValue(), \
+                  self.mobil.GetValue(), self.email.GetValue(), \
+                  self.website.GetValue(), self.quelle.GetValue(), \
                   self.ergebnis.GetValue()])
 
         werte = [wert.strip() for wert in werte]
 
         log.info("BEGINN")
+        log.debug(ausgabedatei)
+        log.debug(schluessel)
         log.debug(werte)
 
-        dictionary = dict(zip(schluessel.split(", "), werte))
+        dictionary = dict(zip(schluessel, werte))
 
         for k in dictionary.keys():
             log.debug(k)
             log.debug(dictionary[k])
         
-        bezeichnung       = str(self.bezeichnung.GetValue()).replace(" ", "_")
-        firma             = str(self.firma.GetValue()).replace(" ", "_")
-        self.ausgabedatei = bezeichnung + "_" + firma + "_" + zeit + ".txt"
-   
-        try:
-            dlg = wx.MessageDialog(None, "Die Anwendung wird geschlossen, wenn kein Angebot ausgewählt wird.", "Angebotstext auswählen und kopieren", wx.YES_NO | wx.ICON_QUESTION)
-            retCode = dlg.ShowModal()
-            if(retCode == wx.ID_YES):
-                angebot = check_output('xsel')
-                self.angebotstext = angebot.decode('utf-8')
-                if len(self.angebotstext) == 0:
-                    exit()
-                log.debug(self.ausgabedatei)
-                log.debug(self.angebotstext)
-                with open(self.ausgabedatei, "w") as ausgabe:
-                    ausgabe.write(self.angebotstext)
-                log.debug("GESPEICHERT")
-            else:
-                log.debug("NICHT GESPEICHERT")
-                raise IOError
-        except IOError:
-            log.debug("ENDE WEGEN FEHLENDEN ANGEBOTSTEXTS")
-            dlg.Destroy()
-            exit()
-        
-        log.debug(self.ausgabedatei)
-        
-        dictionary["ausgabedatei"] = self.ausgabedatei
+        # try:
+        #     dlg = wx.MessageDialog(None, "Die Anwendung wird geschlossen, wenn kein Angebot ausgewählt wird.", "Angebotstext auswählen und kopieren", wx.YES_NO | wx.ICON_QUESTION)
+        #     retCode = dlg.ShowModal()
+        #     if(retCode == wx.ID_YES):
+        #         angebot = check_output('xsel')
+        #         self.angebotstext = angebot.decode('utf-8')
+        #         log.debug(self.angebotstext)
+        #         if len(self.angebotstext) == 0:
+        #             exit()
 
-        connect = ""
-        with open("connect.txt") as datei:
-            connect = datei.readline()
-            
-        metadata = MetaData(connect)        
+        #         log.debug(self.angebotstext)
+
+        #         with open(dictionary["ausgabedatei"], "w") as ausgabe:
+        #             ausgabe.write(self.angebotstext)
+        #             log.debug("GESPEICHERT")
+        #     else:
+        #         log.debug("NICHT GESPEICHERT")
+        #         raise IOError
+        # except IOError:
+        #     log.debug("ENDE WEGEN FEHLENDEN ANGEBOTSTEXTS")
+        #     dlg.Destroy()
+        #     exit()
+
+        angebot = check_output('xsel')
+        angebotstext = angebot.decode('utf-8')
+
+        with open(ausgabedatei, "w") as datei:
+            datei.write(angebotstext)
+
+        metadata = MetaData('postgresql+psycopg2://andreas:andreas@localhost:5432/andreas')
 
         bewerbungen = Table(
             'bewerbungen', metadata,
             Column('id', Integer, primary_key=True),
-            Column('bezeichnung', Unicode(255), unique=False, nullable=False),
-            Column('firma', Unicode(128), unique=False, nullable=False),
+            Column('bezeichnung', Unicode(255), unique=False, nullable=True),
+            Column('firma', Unicode(128), unique=False, nullable=True),
             Column('ansprechpartner', Unicode(64), unique=True, nullable=True),
             Column('anrede', Unicode(4), unique=False, nullable=True),
             Column('ausgabedatei', Unicode(255), unique=True, nullable=True),
-            Column('strasse', Unicode(128), unique=False, nullable=False),
-            Column('plz', Unicode(5), unique=False, nullable=False),
-            Column('ort', Unicode(128), unique=False, nullable=False),
+            Column('strasse', Unicode(128), unique=False, nullable=True),
+            Column('plz', Unicode(5), unique=False, nullable=True),
+            Column('ort', Unicode(128), unique=False, nullable=True),
             Column('telefon', Unicode(32), unique=True, nullable=True),
             Column('mobil', Unicode(32), unique=True, nullable=True),
             Column('email', Unicode(128), unique=True, nullable=True),
             Column('website', Unicode(128), unique=True, nullable=True),
-            Column('quelle', Unicode(128), unique=False, nullable=False),
+            Column('quelle', Unicode(128), unique=False, nullable=True),
             Column('ergebnis', Unicode(1024), unique=False, nullable=True),
-            Column('zeit', Unicode(30), unique=True, nullable=False))
+            Column('zeit', DateTime, server_default=func.now()))
         
+        metadata.create_all()
+
         stmt = bewerbungen.insert()
         stmt.execute(dictionary)
+
 
 
     def beenden(self, event):
@@ -300,6 +304,8 @@ class FirmaFrame(wx.Frame):
         
 
 if __name__=='__main__':
+    # system('xsel -c')
     app = wx.App()
     FirmaFrame(None, "Bewerbungen")
     app.MainLoop()
+    log.debug("ENDE")
