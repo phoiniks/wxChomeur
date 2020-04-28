@@ -155,28 +155,28 @@ plz ort telefon mobil email website quelle ergebnis""".split()
             log.debug(k)
             log.debug(dictionary[k])
         
-        # try:
-        #     dlg = wx.MessageDialog(None, "Die Anwendung wird geschlossen, wenn kein Angebot ausgewählt wird.", "Angebotstext auswählen und kopieren", wx.YES_NO | wx.ICON_QUESTION)
-        #     retCode = dlg.ShowModal()
-        #     if(retCode == wx.ID_YES):
-        #         angebot = check_output('xsel')
-        #         self.angebotstext = angebot.decode('utf-8')
-        #         log.debug(self.angebotstext)
-        #         if len(self.angebotstext) == 0:
-        #             exit()
+        try:
+            dlg = wx.MessageDialog(None, "Die Anwendung wird geschlossen, wenn kein Angebot ausgewählt wird.", "Angebotstext auswählen und kopieren", wx.YES_NO | wx.ICON_QUESTION)
+            retCode = dlg.ShowModal()
+            if(retCode == wx.ID_YES):
+                angebot = check_output('xsel')
+                self.angebotstext = angebot.decode('utf-8')
+                log.debug(self.angebotstext)
+                if len(self.angebotstext) == 0:
+                    exit()
 
-        #         log.debug(self.angebotstext)
+                log.debug(self.angebotstext)
 
-        #         with open(dictionary["ausgabedatei"], "w") as ausgabe:
-        #             ausgabe.write(self.angebotstext)
-        #             log.debug("GESPEICHERT")
-        #     else:
-        #         log.debug("NICHT GESPEICHERT")
-        #         raise IOError
-        # except IOError:
-        #     log.debug("ENDE WEGEN FEHLENDEN ANGEBOTSTEXTS")
-        #     dlg.Destroy()
-        #     exit()
+                with open(dictionary["ausgabedatei"], "w") as ausgabe:
+                    ausgabe.write(self.angebotstext)
+                    log.debug("GESPEICHERT")
+            else:
+                log.debug("NICHT GESPEICHERT")
+                raise IOError
+        except IOError:
+            log.debug("ENDE WEGEN FEHLENDEN ANGEBOTSTEXTS")
+            dlg.Destroy()
+            exit()
 
         angebot = check_output('xsel')
         angebotstext = angebot.decode('utf-8')
